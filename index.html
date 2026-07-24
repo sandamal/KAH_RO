@@ -1,0 +1,2328 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <!-- Firebase App (core) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <!-- Firestore -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <!-- SheetJS with style support for Excel export -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+  <script>
+    // Import the functions you need from the SDKs you need
+    // TODO: Add SDKs for Firebase products that you want to use
+    // https://firebase.google.com/docs/web/setup#available-libraries
+
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyC4vjp8jU0Bizbm5UVtFvYKJq0Wcj2H_9o",
+      authDomain: "rosterdatabase-kahathuduwa.firebaseapp.com",
+      databaseURL: "https://rosterdatabase-kahathuduwa-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "rosterdatabase-kahathuduwa",
+      storageBucket: "rosterdatabase-kahathuduwa.firebasestorage.app",
+      messagingSenderId: "790537056413",
+      appId: "1:790537056413:web:61ac69a6f5190350a4e474"
+    };
+
+    // Initialize Firebase
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+  </script>
+
+  <meta charset="UTF-8">
+  <title>Roster Generator v9</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
+    rel="stylesheet">
+
+  <!-- PWA Manifest & Icons -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#7c3aed">
+  <link rel="apple-touch-icon" href="icon.svg">
+
+  <style>
+    /* ===== RESET & BASE ===== */
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f8fafc;
+      color: #1e293b;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ===== HEADER ===== */
+    .app-header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid #e2e8f0;
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, #7c3aed, #6d28d9);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 700;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .header-title {
+      font-size: 17px;
+      font-weight: 600;
+      color: #1e293b;
+    }
+
+    .header-title span {
+      color: #94a3b8;
+      font-weight: 400;
+      font-size: 13px;
+      margin-left: 6px;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .user-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #f1f5f9;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #475569;
+    }
+
+    .user-pill .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #94a3b8;
+    }
+
+    .user-pill .dot.online {
+      background: #22c55e;
+    }
+
+    /* ===== BUTTONS ===== */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .btn:active {
+      transform: scale(0.97);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #7c3aed, #6d28d9);
+      color: #fff;
+      border: none;
+      box-shadow: 0 1px 3px rgba(124, 58, 237, 0.3);
+    }
+
+    .btn-primary:hover {
+      box-shadow: 0 4px 12px rgba(124, 58, 237, 0.35);
+      transform: translateY(-1px);
+    }
+
+    .btn-outline {
+      background: #fff;
+      color: #475569;
+      border: 1px solid #e2e8f0;
+    }
+
+    .btn-outline:hover {
+      background: #f8fafc;
+      border-color: #cbd5e1;
+    }
+
+    .btn-outline.active {
+      background: #e2e8f0;
+      border-color: #94a3b8;
+      font-weight: 600;
+    }
+
+    .btn-danger {
+      background: #fef2f2;
+      color: #dc2626;
+      border: 1px solid #fecaca;
+    }
+
+    .btn-danger:hover {
+      background: #fee2e2;
+    }
+
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 12px;
+    }
+
+    /* ===== LAYOUT ===== */
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 24px 20px 60px;
+    }
+
+    /* ===== CARDS ===== */
+    .card {
+      background: #fff;
+      border-radius: 14px;
+      border: 1px solid #e2e8f0;
+      border-left: 3px solid #7c3aed;
+      padding: 20px 24px;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+      transition: box-shadow 0.2s ease;
+    }
+
+    .card:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    }
+
+    .card-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #1e293b;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-title .icon {
+      font-size: 18px;
+    }
+
+    /* ===== TEAM SELECTION ===== */
+
+    /* ===== FORM ELEMENTS ===== */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 14px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .form-group label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    input[type="date"],
+    input[type="text"],
+    input[type="password"],
+    select,
+    .form-input {
+      font-family: inherit;
+      width: 100%;
+      padding: 9px 12px;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+      background: #fff;
+      font-size: 14px;
+      color: #1e293b;
+      outline: none;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    input:focus,
+    select:focus {
+      border-color: #7c3aed;
+      box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+    }
+
+    input::placeholder {
+      color: #94a3b8;
+    }
+
+    .teller-input {
+      font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+      font-size: 13px;
+      letter-spacing: 0.3px;
+    }
+
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #475569;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+
+    .checkbox-label input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: #7c3aed;
+    }
+
+    /* ===== BOOTH TIME SLOT ===== */
+    .ts-tabs {
+      display: inline-flex;
+      background: #f1f5f9;
+      border-radius: 10px;
+      padding: 3px;
+      margin-bottom: 12px;
+    }
+
+    .ts-tab-btn {
+      padding: 7px 20px;
+      border: none;
+      border-radius: 8px;
+      background: transparent;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 500;
+      color: #64748b;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .ts-tab-btn:hover { color: #1e293b; }
+
+    .ts-tab-btn.active {
+      background: #fff;
+      color: #1e293b;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      font-weight: 600;
+    }
+
+    .ts-sub-tabs {
+      display: inline-flex;
+      background: #f1f5f9;
+      border-radius: 10px;
+      padding: 3px;
+      margin-bottom: 16px;
+      margin-left: 10px;
+    }
+
+    .ts-sub-btn {
+      padding: 6px 16px;
+      border: none;
+      border-radius: 8px;
+      background: transparent;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 500;
+      color: #64748b;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .ts-sub-btn:hover { color: #1e293b; }
+
+    .ts-sub-btn.active {
+      background: #fff;
+      color: #1e293b;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      font-weight: 600;
+    }
+
+    .ts-sub-btn.day-active {
+      background: #fffbeb;
+      color: #b45309;
+      box-shadow: 0 1px 3px rgba(180,83,9,0.12);
+    }
+
+    .ts-sub-btn.night-active {
+      background: #eef2ff;
+      color: #4338ca;
+      box-shadow: 0 1px 3px rgba(67,56,202,0.12);
+    }
+
+    .ts-table-wrap { overflow-x: auto; }
+
+    .ts-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      font-size: 13px;
+    }
+
+    .ts-table thead th {
+      background: #f8fafc;
+      color: #64748b;
+      font-weight: 600;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 8px 10px;
+      text-align: left;
+      border-bottom: 2px solid #e2e8f0;
+      white-space: nowrap;
+    }
+
+    .ts-table thead th:first-child { text-align: center; width: 36px; }
+    .ts-table thead th:nth-child(2) { width: 100px; }
+    .ts-table thead th:last-child { width: 36px; }
+
+    .ts-table tbody td {
+      padding: 6px 6px;
+      border-bottom: 1px solid #f1f5f9;
+      vertical-align: top;
+    }
+
+    .ts-table tbody td:first-child {
+      text-align: center;
+      font-weight: 700;
+      color: #94a3b8;
+      font-size: 12px;
+      padding-top: 10px;
+    }
+
+    .ts-table tbody tr:hover { background: #faf5ff; }
+
+    .ts-teller-input {
+      width: 100%;
+      padding: 7px 10px;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+      font-family: 'JetBrains Mono','Fira Code','Consolas', monospace;
+      font-size: 12px;
+      outline: none;
+      transition: border-color 0.15s;
+      background: #fff;
+    }
+
+    .ts-teller-input:focus {
+      border-color: #7c3aed;
+      box-shadow: 0 0 0 3px rgba(124,58,237,0.1);
+    }
+
+    .ts-slots-cell { min-width: 200px; }
+
+    .ts-slot-row {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-bottom: 4px;
+    }
+
+    .ts-slot-row:last-child { margin-bottom: 0; }
+
+    .ts-slot-select {
+      padding: 5px 6px;
+      border-radius: 6px;
+      border: 1px solid #e2e8f0;
+      font-family: inherit;
+      font-size: 12px;
+      outline: none;
+      background: #fff;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+
+    .ts-slot-select:focus {
+      border-color: #7c3aed;
+      box-shadow: 0 0 0 2px rgba(124,58,237,0.08);
+    }
+
+    .ts-slot-select.booth-sel { width: 68px; font-weight: 600; color: #7c3aed; }
+    .ts-slot-select.time-sel { width: 72px; }
+    .ts-slot-sep { color: #cbd5e1; font-size: 11px; font-weight: 600; }
+
+    .ts-btn-remove-slot {
+      width: 22px;
+      height: 22px;
+      border-radius: 5px;
+      border: none;
+      background: transparent;
+      color: #cbd5e1;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+      flex-shrink: 0;
+    }
+
+    .ts-btn-remove-slot:hover { background: #fef2f2; color: #dc2626; }
+
+    .ts-move-sel {
+      width: 36px;
+      font-size: 11px;
+      color: #64748b;
+      border-color: #e2e8f0;
+      background: #fff;
+    }
+
+    .ts-btn-slot-clip {
+      width: 22px;
+      height: 22px;
+      border-radius: 4px;
+      border: none;
+      background: transparent;
+      color: #94a3b8;
+      font-size: 12px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+      flex-shrink: 0;
+    }
+    .ts-btn-slot-clip:hover { background: #fef3c7; color: #d97706; }
+    .ts-slot-row.ts-cut { opacity: 0.4; border-style: dashed; }
+
+    .ts-slot-move-btns { display: inline-flex; flex-direction: column; gap: 0; margin-right: 2px; flex-shrink: 0; }
+    .ts-btn-slot-move {
+      width: 18px;
+      height: 14px;
+      border: none;
+      background: transparent;
+      color: #cbd5e1;
+      font-size: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      transition: all 0.15s;
+    }
+    .ts-btn-slot-move:hover:not(:disabled) { color: #0284c7; background: #e0f2fe; }
+    .ts-btn-slot-move:disabled { color: #e2e8f0; cursor: default; }
+
+    .ts-slot-actions { display: flex; gap: 4px; margin-top: 4px; align-items: center; flex-wrap: wrap; }
+    .ts-paste-btn {
+      padding: 3px 8px;
+      border-radius: 5px;
+      border: 1px solid #86efac;
+      background: #f0fdf4;
+      color: #16a34a;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .ts-paste-btn:hover { background: #dcfce7; }
+    .ts-cancel-btn {
+      padding: 3px 8px;
+      border-radius: 5px;
+      border: 1px solid #fca5a5;
+      background: #fef2f2;
+      color: #dc2626;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .ts-cancel-btn:hover { background: #fee2e2; }
+
+    .ts-btn-remove-row {
+      width: 26px;
+      height: 26px;
+      border-radius: 6px;
+      border: none;
+      background: transparent;
+      color: #cbd5e1;
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+    }
+
+    .ts-btn-remove-row:hover { background: #fef2f2; color: #dc2626; }
+
+    .ts-row-move-cell { white-space: nowrap; text-align: center; }
+    .ts-btn-row-move {
+      width: 20px;
+      height: 20px;
+      border: none;
+      background: transparent;
+      color: #cbd5e1;
+      font-size: 10px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 3px;
+      transition: all 0.15s;
+    }
+    .ts-btn-row-move:hover:not(:disabled) { color: #0284c7; background: #e0f2fe; }
+    .ts-btn-row-move:disabled { color: #e2e8f0; cursor: default; }
+
+    .ts-add-slot-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 1px dashed #cbd5e1;
+      background: transparent;
+      color: #7c3aed;
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      margin-top: 4px;
+    }
+
+    .ts-add-slot-btn:hover { background: #f5f3ff; border-color: #7c3aed; }
+
+    .ts-add-teller-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 7px 14px;
+      border-radius: 8px;
+      border: 1px dashed #cbd5e1;
+      background: #fafbfc;
+      color: #7c3aed;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      margin-top: 12px;
+    }
+
+    .ts-add-teller-btn:hover { background: #f5f3ff; border-color: #7c3aed; }
+
+    .ts-empty-msg {
+      color: #94a3b8;
+      font-size: 12px;
+      font-style: italic;
+      padding: 12px 0;
+      text-align: center;
+    }
+
+    /* ===== ACTIONS BAR ===== */
+    .actions-bar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    /* ===== TABS / SEGMENTED CONTROL ===== */
+    .tab-group {
+      display: inline-flex;
+      background: #f1f5f9;
+      border-radius: 10px;
+      padding: 3px;
+      margin-bottom: 16px;
+    }
+
+    .tab-btn {
+      padding: 7px 18px;
+      border: none;
+      border-radius: 8px;
+      background: transparent;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 500;
+      color: #64748b;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .tab-btn:hover {
+      color: #1e293b;
+    }
+
+    .tab-btn.active {
+      background: #fff;
+      color: #1e293b;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+      font-weight: 600;
+    }
+
+    /* ===== TABLE ===== */
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      font-size: 13px;
+    }
+
+    thead th {
+      background: #f8fafc;
+      color: #64748b;
+      font-weight: 600;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 10px 14px;
+      text-align: center;
+      border-bottom: 2px solid #e2e8f0;
+      white-space: nowrap;
+    }
+
+    tbody td {
+      padding: 10px 14px;
+      text-align: center;
+      border-bottom: 1px solid #f1f5f9;
+      color: #334155;
+      font-weight: 500;
+    }
+
+    tbody tr {
+      transition: background 0.1s;
+    }
+
+    tbody tr:hover {
+      background: #f8fafc;
+    }
+
+    .shift-badge {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .shift-badge.day {
+      background: #fef3c7;
+      color: #b45309;
+    }
+
+    .shift-badge.night {
+      background: #e0e7ff;
+      color: #4338ca;
+    }
+
+    .shift-badge.off {
+      background: #f1f5f9;
+      color: #94a3b8;
+    }
+
+    /* ===== MODAL ===== */
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.5);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+    }
+
+    .modal-card {
+      background: #fff;
+      padding: 28px;
+      border-radius: 16px;
+      width: 340px;
+      max-width: 90vw;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+      animation: modalIn 0.25s ease;
+    }
+
+    @keyframes modalIn {
+      from {
+        opacity: 0;
+        transform: translateY(16px) scale(0.97);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .modal-card h3 {
+      font-size: 18px;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .modal-card .form-group {
+      margin-bottom: 14px;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .modal-actions .btn {
+      flex: 1;
+      justify-content: center;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 640px) {
+      .app-header {
+        flex-direction: column;
+        gap: 12px;
+        padding: 14px 16px;
+        align-items: stretch;
+      }
+
+      .header-left {
+        justify-content: center;
+      }
+
+      .header-right {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 8px;
+      }
+
+      .header-right .btn {
+        padding: 6px 12px;
+        font-size: 12px;
+      }
+
+      .header-title span {
+        display: none;
+      }
+
+      .container {
+        padding: 16px 12px 40px;
+      }
+
+      .card {
+        padding: 16px 14px;
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .actions-bar {
+        flex-direction: column;
+      }
+
+      .actions-bar .btn {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .tab-group {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+
+      .tab-btn {
+        flex: 1 1 auto;
+        text-align: center;
+        font-size: 12px;
+        padding: 8px 10px;
+      }
+
+      .ts-table-wrap {
+        margin: 0 -14px;
+        padding: 0 14px 8px;
+      }
+
+      table {
+        font-size: 11px;
+      }
+
+      .ts-slot-select.booth-sel { width: 58px; }
+      .ts-slot-select.time-sel { width: 62px; }
+
+      thead th,
+      tbody td {
+        padding: 6px 8px;
+      }
+    }
+
+    /* ===== PRINT ===== */
+    @media print {
+      @page {
+        size: A4 portrait;
+        margin: 8mm;
+      }
+
+      body {
+        background: #fff;
+      }
+
+      .app-header,
+      .card:not(#previewCard),
+      .actions-bar,
+      .tab-group,
+      .btn,
+      .toggle,
+      .ts-add-teller-btn,
+      .ts-add-slot-btn {
+        display: none !important;
+      }
+
+      #previewCard {
+        display: block !important;
+        box-shadow: none;
+        border: none;
+        padding: 0;
+      }
+
+      table {
+        width: 100% !important;
+        table-layout: fixed;
+        border-collapse: collapse;
+      }
+
+      th,
+      td {
+        border: 1px solid #000;
+        padding: 4px;
+        font-size: 11px;
+        text-align: center;
+      }
+
+      th {
+        background: #444 !important;
+        color: #fff !important;
+      }
+    }
+
+    /* ===== ADMIN ONLY BUTTONS ===== */
+    .admin-only {
+      display: none;
+    }
+
+    /* ===== LOADING SPINNER ===== */
+    .spinner {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ═══════ HEADER ═══════ -->
+  <header class="app-header">
+    <div class="header-left">
+      <div class="logo">R</div>
+      <div class="header-title">Roster Generator <span>v9</span></div>
+    </div>
+    <div class="header-right">
+      <button class="btn btn-primary btn-sm" onclick="generateRoster()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21.5 2v6h-6" />
+          <path d="M21.34 15.57a10 10 0 1 1-.57-8.38" />
+        </svg>
+        Generate All (P1+P2)
+      </button>
+      <button class="btn btn-outline btn-sm" onclick="exportPDF()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+          stroke-linecap="round" stroke-linejoin="round">
+          <rect x="6" y="2" width="12" height="8" rx="1" />
+          <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+          <rect x="6" y="14" width="12" height="8" rx="1" />
+        </svg>
+        Export PDF
+      </button>
+      <button id="btnDownloadRoster" class="btn btn-outline btn-sm" onclick="openDownloadModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+          <polyline points="7 10 12 15 17 10" />
+          <line x1="12" y1="15" x2="12" y2="3" />
+        </svg>
+        Download Roster
+      </button>
+      <button class="btn btn-primary btn-sm" onclick="syncRosterToCloud()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+          <polyline points="17 8 12 3 7 8" />
+          <line x1="12" y1="3" x2="12" y2="15" />
+        </svg>
+        Sync to Cloud
+      </button>
+      <div style="width:1px;height:24px;background:#e2e8f0;margin:0 4px"></div>
+      <div class="user-pill">
+        <div class="dot" id="statusDot"></div>
+        <span id="userRoleLabel">Guest</span>
+      </div>
+      <button id="authBtn" class="btn btn-outline btn-sm" onclick="openLogin()">Sign In</button>
+    </div>
+  </header>
+
+  <div class="container">
+
+    <!-- ═══════ TEAM SELECTION ═══════ -->
+    <div class="card" id="teamCard" style="display:none">
+      <div class="card-title"><span class="icon">👥</span> Team Selection</div>
+      <div class="form-grid">
+        <div class="form-group" style="max-width:260px">
+          <label>Select Team</label>
+          <select id="teamSelect">
+            <option value="">-- Select Team --</option>
+            <option value="Team1">Team 1</option>
+            <option value="Team2">Team 2</option>
+            <option value="Team3">Team 3</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════ BOOTH TIME SLOT ═══════ -->
+    <div class="card">
+      <div class="card-title"><span class="icon">🕐</span> Booth Time Slot</div>
+      <div class="form-grid" style="margin-bottom:16px">
+        <div class="form-group">
+          <label>Base Date</label>
+          <input type="date" id="baseDate">
+        </div>
+        <div class="form-group">
+          <label>Base Rotation</label>
+          <select id="baseRotation">
+            <optgroup label="Day">
+              <option value="0">Day 1</option>
+              <option value="1">Day 2</option>
+              <option value="2">Day 3</option>
+              <option value="3">Day 4</option>
+            </optgroup>
+            <optgroup label="Night">
+              <option value="4">Night 1</option>
+              <option value="5">Night 2</option>
+              <option value="6">Night 3</option>
+              <option value="7">Night 4</option>
+            </optgroup>
+            <optgroup label="Off">
+              <option value="8">Off 1</option>
+              <option value="9">Off 2</option>
+              <option value="10">Off 3</option>
+              <option value="11">Off 4</option>
+            </optgroup>
+          </select>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;flex-wrap:wrap;gap:0;margin-bottom:4px">
+        <div class="ts-tabs" id="patternTabs">
+          <button class="ts-tab-btn active" onclick="switchPattern('pattern1')">Pattern 1</button>
+          <button class="ts-tab-btn" onclick="switchPattern('pattern2')">Pattern 2</button>
+        </div>
+        <div class="ts-sub-tabs" id="shiftTabs">
+          <button class="ts-sub-btn day-active" onclick="switchShift('day')">☀ Day 07:00–19:00</button>
+          <button class="ts-sub-btn" onclick="switchShift('night')">🌙 Night 19:00–07:00</button>
+        </div>
+        <div style="margin-left:auto;display:flex;gap:4px">
+          <button class="btn btn-outline btn-sm" onclick="savePatternBoothToCloud('pattern1')">💾 Save P1</button>
+          <button class="btn btn-outline btn-sm" onclick="savePatternBoothToCloud('pattern2')">💾 Save P2</button>
+          <button class="btn btn-outline btn-sm" onclick="switchPatternBooths()" title="Switch P1 ↔ P2 with teller IDs">⇄ Switch</button>
+          <button class="btn btn-outline btn-sm" onclick="copyPatternBooths()" id="copyPatternBtn">📋 Copy → P2</button>
+        </div>
+      </div>
+      <div class="ts-table-wrap">
+        <table class="ts-table" id="tsTable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Teller ID</th>
+              <th>Booth Assignments</th>
+              <th></th>
+              <th style="width:28px"></th>
+            </tr>
+          </thead>
+          <tbody id="tsTableBody"></tbody>
+        </table>
+      </div>
+      <button class="ts-add-teller-btn" onclick="tsAddTeller()">+ Add Teller</button>
+    </div>
+
+    <!-- ═══════ CLOUD ACTIONS ═══════ -->
+    <div class="card">
+      <div class="card-title"><span class="icon">☁️</span> Cloud Actions</div>
+      <div class="actions-bar">
+        <button class="btn btn-outline admin-only" onclick="loadBoothSettingsFromCloud('Team1')">📥 Load Team1
+          Booths</button>
+        <button class="btn btn-outline admin-only" onclick="loadBoothSettingsFromCloud('Team2')">📥 Load Team2
+          Booths</button>
+        <button class="btn btn-outline admin-only" onclick="loadBoothSettingsFromCloud('Team3')">📥 Load Team3
+          Booths</button>
+        <button class="btn btn-outline" onclick="loadBoothSettingsFromCloud(currentUser.role === 'Admin' ? document.getElementById('teamSelect').value : currentUser.role)">📥 Load Booth Settings</button>
+      </div>
+    </div>
+
+
+
+    <!-- ═══════ ROTATION SETTINGS ═══════ -->
+    <div class="card">
+      <div class="card-title"><span class="icon">📅</span> Rotation Settings</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Start Date</label>
+          <input type="date" id="startDate">
+        </div>
+        <div class="form-group">
+          <label>End Date</label>
+          <input type="date" id="endDate">
+        </div>
+      </div>
+      <label class="checkbox-label">
+        <input type="checkbox" id="repeatRoster">
+        Repeat Roster (Night same as Day)
+      </label>
+      <label class="checkbox-label">
+        <input type="checkbox" id="repeatDayFromLastNight">
+        Repeat Roster (Day same as last Night)
+      </label>
+      <label class="checkbox-label">
+        <input type="checkbox" id="repeatSeparate">
+        Repeat Roster (Day, Night Separate)
+      </label>
+    </div>
+
+    <!-- ═══════ ROSTER PREVIEW ═══════ -->
+    <div class="card" id="previewCard" style="display:none">
+      <div class="card-title"><span class="icon">📊</span> Generated Roster</div>
+      <div style="display:flex;gap:4px;margin-bottom:6px">
+        <button class="btn btn-sm btn-outline" id="previewP1Btn" onclick="switchPreview('pattern1')">Pattern 1</button>
+        <button class="btn btn-sm btn-outline" id="previewP2Btn" onclick="switchPreview('pattern2')">Pattern 2</button>
+      </div>
+      <div style="overflow-x:auto">
+        <table>
+          <thead id="previewHead"></thead>
+          <tbody id="previewBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══════ LOGIN MODAL ═══════ -->
+  <div id="loginModal" class="modal">
+    <div class="modal-card">
+      <h3>🔐 Sign In</h3>
+      <div class="form-group">
+        <label>User Role</label>
+        <select id="loginRole">
+          <option value="Admin">Admin</option>
+          <option value="Team1">Team 1</option>
+          <option value="Team2">Team 2</option>
+          <option value="Team3">Team 3</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="loginPassword" placeholder="Enter password">
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-primary" onclick="doLogin()">Login</button>
+        <button class="btn btn-outline" onclick="closeLogin()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════ DOWNLOAD ROSTER MODAL ═══════ -->
+  <div id="downloadModal" class="modal">
+    <div class="modal-card" style="width:380px">
+      <h3>📥 Download Roster</h3>
+      <div id="dlAllTeamsWrap" class="form-group admin-only" style="margin-top:12px;display:none">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px">
+          <input type="checkbox" id="dlAllTeams" style="width:16px;height:16px"> Download All Teams (separate sheets)
+        </label>
+      </div>
+      <div class="form-group">
+        <label>Start Date</label>
+        <input type="date" id="dlStartDate">
+      </div>
+      <div class="form-group" style="margin-top:12px">
+        <label>End Date</label>
+        <input type="date" id="dlEndDate">
+      </div>
+      <div id="dlStatus" style="margin-top:14px;text-align:center;font-size:13px;color:#64748b;display:none"></div>
+      <div class="modal-actions">
+        <button id="dlConfirmBtn" class="btn btn-primary" onclick="confirmDownloadRoster()">⬇ Download</button>
+        <button class="btn btn-outline" onclick="closeDownloadModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ===== BOOTH TIME SLOT LOGIC ===== */
+    const BOOTH_IDS = ["J1","J2","J3","L1","L2","L3"];
+    const DAY_HOURS = ["07:00","08:00","09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00"];
+    const NIGHT_HOURS = ["19:00","20:00","21:00","22:00","23:00","00:00","01:00","02:00","03:00","04:00","05:00","06:00","07:00"];
+
+    let boothTimeSlots = {
+      pattern1: { day: [], night: [] },
+      pattern2: { day: [], night: [] }
+    };
+    let activePattern = "pattern1";
+    let activeShift = "day";
+
+    function tsGetHours() {
+      return activeShift === "day" ? DAY_HOURS : NIGHT_HOURS;
+    }
+
+    function tsBuildOptions(arr, selected) {
+      return arr.map(v => `<option value="${v}"${v === selected ? ' selected' : ''}>${v}</option>`).join('');
+    }
+
+    function tsRenderTable() {
+      const tbody = document.getElementById('tsTableBody');
+      const data = boothTimeSlots[activePattern][activeShift];
+      tbody.innerHTML = '';
+      if (!data.length) {
+        tbody.innerHTML = '<tr><td colspan="5" class="ts-empty-msg">No tellers added. Click "+ Add Teller" below.</td></tr>';
+        return;
+      }
+      data.forEach((entry, idx) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${idx + 1}</td>
+          <td><input class="ts-teller-input" value="${entry.tellerId}" placeholder="e.g. 171"
+            onchange="tsUpdateTellerId(${idx}, this.value)"></td>
+          <td class="ts-slots-cell" id="tsSlots_${idx}">
+            ${entry.booths.map((b, bi) => tsSlotRowHtml(idx, bi, b)).join('')}
+            <div class="ts-slot-actions">
+              <button class="ts-add-slot-btn" onclick="tsAddSlot(${idx})">+ Add Slot</button>
+              ${tsClipboard && tsClipboard.fromTeller !== idx ? `<button class="ts-paste-btn" onclick="tsPasteSlot(${idx})">📋 Paste</button>` : ''}
+              ${tsClipboard && tsClipboard.fromTeller === idx ? `<button class="ts-cancel-btn" onclick="tsCancelCut()">Cancel</button>` : ''}
+            </div>
+          </td>
+          <td><button class="ts-btn-remove-row" onclick="tsRemoveTeller(${idx})" title="Remove">&times;</button></td>
+          <td class="ts-row-move-cell">
+            <button class="ts-btn-row-move" onclick="tsMoveTeller(${idx},-1)" title="Move up" ${idx > 0 ? '' : 'disabled'}>▲</button>
+            <button class="ts-btn-row-move" onclick="tsMoveTeller(${idx},1)" title="Move down" ${idx < data.length - 1 ? '' : 'disabled'}>▼</button>
+          </td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    let tsClipboard = null;
+
+    function tsSlotRowHtml(tellerIdx, slotIdx, slot) {
+      const hours = tsGetHours();
+      const isCut = tsClipboard && tsClipboard.fromTeller === tellerIdx && tsClipboard.fromSlot === slotIdx;
+      const booths = boothTimeSlots[activePattern][activeShift][tellerIdx].booths;
+      const canUp = slotIdx > 0;
+      const canDn = slotIdx < booths.length - 1;
+      return `<div class="ts-slot-row${isCut ? ' ts-cut' : ''}" id="tsSlot_${tellerIdx}_${slotIdx}">
+        <div class="ts-slot-move-btns">
+          <button class="ts-btn-slot-move" onclick="tsReorderSlot(${tellerIdx},${slotIdx},-1)" title="Move up" ${canUp ? '' : 'disabled'}>▲</button>
+          <button class="ts-btn-slot-move" onclick="tsReorderSlot(${tellerIdx},${slotIdx},1)" title="Move down" ${canDn ? '' : 'disabled'}>▼</button>
+        </div>
+        <select class="ts-slot-select booth-sel" onchange="tsUpdateSlot(${tellerIdx},${slotIdx},'id',this.value)">
+          ${tsBuildOptions(BOOTH_IDS, slot.id)}
+        </select>
+        <select class="ts-slot-select time-sel" onchange="tsUpdateSlot(${tellerIdx},${slotIdx},'start',this.value)">
+          ${tsBuildOptions(hours, slot.start)}
+        </select>
+        <span class="ts-slot-sep">–</span>
+        <select class="ts-slot-select time-sel" onchange="tsUpdateSlot(${tellerIdx},${slotIdx},'end',this.value)">
+          ${tsBuildOptions(hours, slot.end)}
+        </select>
+        <button class="ts-btn-slot-clip" onclick="tsCutSlot(${tellerIdx},${slotIdx})" title="Cut slot">✂</button>
+        <button class="ts-btn-remove-slot" onclick="tsRemoveSlot(${tellerIdx},${slotIdx})" title="Remove">×</button>
+      </div>`;
+    }
+
+    function tsAddTeller() {
+      boothTimeSlots[activePattern][activeShift].push({ tellerId: '', booths: [{ id: 'J1', start: tsGetHours()[0], end: tsGetHours()[1] }] });
+      tsRenderTable();
+    }
+
+    function tsRemoveTeller(idx) {
+      boothTimeSlots[activePattern][activeShift].splice(idx, 1);
+      tsRenderTable();
+    }
+
+    function tsMoveTeller(idx, dir) {
+      const arr = boothTimeSlots[activePattern][activeShift];
+      const newIdx = idx + dir;
+      if (newIdx < 0 || newIdx >= arr.length) return;
+      [arr[idx], arr[newIdx]] = [arr[newIdx], arr[idx]];
+      tsClipboard = null;
+      tsRenderTable();
+    }
+
+    function tsUpdateTellerId(idx, val) {
+      boothTimeSlots[activePattern][activeShift][idx].tellerId = val.trim();
+    }
+
+    function tsAddSlot(tellerIdx) {
+      const hours = tsGetHours();
+      boothTimeSlots[activePattern][activeShift][tellerIdx].booths.push({ id: 'J1', start: hours[0], end: hours[1] });
+      tsRenderTable();
+    }
+
+    function tsRemoveSlot(tellerIdx, slotIdx) {
+      boothTimeSlots[activePattern][activeShift][tellerIdx].booths.splice(slotIdx, 1);
+      if (boothTimeSlots[activePattern][activeShift][tellerIdx].booths.length === 0) {
+        boothTimeSlots[activePattern][activeShift].splice(tellerIdx, 1);
+      }
+      tsRenderTable();
+    }
+
+    function tsCutSlot(tellerIdx, slotIdx) {
+      const slot = boothTimeSlots[activePattern][activeShift][tellerIdx].booths[slotIdx];
+      tsClipboard = { fromTeller: tellerIdx, fromSlot: slotIdx, data: JSON.parse(JSON.stringify(slot)) };
+      tsRenderTable();
+    }
+
+    function tsPasteSlot(toIdx) {
+      if (!tsClipboard) return;
+      const arr = boothTimeSlots[activePattern][activeShift];
+      arr[toIdx].booths.push(tsClipboard.data);
+      arr[tsClipboard.fromTeller].booths.splice(tsClipboard.fromSlot, 1);
+      if (!arr[tsClipboard.fromTeller].booths.length) arr.splice(tsClipboard.fromTeller, 1);
+      tsClipboard = null;
+      tsRenderTable();
+    }
+
+    function tsCancelCut() {
+      tsClipboard = null;
+      tsRenderTable();
+    }
+
+    function tsReorderSlot(tellerIdx, slotIdx, dir) {
+      const booths = boothTimeSlots[activePattern][activeShift][tellerIdx].booths;
+      const newIdx = slotIdx + dir;
+      if (newIdx < 0 || newIdx >= booths.length) return;
+      [booths[slotIdx], booths[newIdx]] = [booths[newIdx], booths[slotIdx]];
+      tsRenderTable();
+    }
+
+    function tsUpdateSlot(tellerIdx, slotIdx, field, val) {
+      boothTimeSlots[activePattern][activeShift][tellerIdx].booths[slotIdx][field] = val;
+    }
+
+    function switchPattern(p) {
+      activePattern = p;
+      document.querySelectorAll('#patternTabs .ts-tab-btn').forEach(b => {
+        b.classList.remove('active');
+        if ((p === 'pattern1' && b.textContent.includes('1')) || (p === 'pattern2' && b.textContent.includes('2'))) {
+          b.classList.add('active');
+        }
+      });
+      document.getElementById('copyPatternBtn').textContent = p === 'pattern1' ? '📋 Copy \u2192 P2' : '📋 Copy \u2192 P1';
+      tsRenderTable();
+    }
+
+    function switchShift(s) {
+      activeShift = s;
+      document.querySelectorAll('#shiftTabs .ts-sub-btn').forEach(b => {
+        b.classList.remove('active', 'day-active', 'night-active');
+        if ((s === 'day' && b.textContent.includes('Day')) || (s === 'night' && b.textContent.includes('Night'))) {
+          b.classList.add('active');
+          if (s === 'day') b.classList.add('day-active');
+          else b.classList.add('night-active');
+        }
+      });
+      tsRenderTable();
+    }
+
+    function collectTimeSlots(pattern, shift) {
+      return boothTimeSlots[pattern][shift];
+    }
+
+    function collectTellerIds(pattern) {
+      const ids = new Set();
+      const patterns = pattern ? [pattern] : ['pattern1','pattern2'];
+      patterns.forEach(p => {
+        ['day','night'].forEach(s => {
+          boothTimeSlots[p][s].forEach(e => { if (e.tellerId) ids.add(e.tellerId); });
+        });
+      });
+      return [...ids];
+    }
+
+    function copyPatternBooths() {
+      const target = activePattern === 'pattern1' ? 'pattern2' : 'pattern1';
+      ['day','night'].forEach(s => {
+        boothTimeSlots[target][s] = boothTimeSlots[activePattern][s].map(e => ({
+          tellerId: '',
+          booths: (e.booths || []).map(b => ({ id: b.id, start: b.start, end: b.end }))
+        }));
+      });
+      const msg = 'Booth slots copied from ' + activePattern + ' to ' + target + ' ✔';
+      switchPattern(target);
+      alert(msg);
+    }
+
+    function switchPatternBooths() {
+      const tmpP1 = JSON.parse(JSON.stringify(boothTimeSlots.pattern1));
+      const tmpP2 = JSON.parse(JSON.stringify(boothTimeSlots.pattern2));
+      boothTimeSlots.pattern1 = tmpP2;
+      boothTimeSlots.pattern2 = tmpP1;
+      const target = activePattern === 'pattern1' ? 'pattern2' : 'pattern1';
+      switchPattern(target);
+      alert('Patterns switched ✔');
+    }
+
+    /* ROSTER CORE LOGIC */
+    const rotationCycle = ["day", "day", "day", "day", "night", "night", "night", "night", "off", "off", "off", "off"];
+    let previewRosters = { pattern1: {}, pattern2: {} };
+    let previewPattern = 'pattern1';
+
+    function getTellerSlots(tellerId, shift) {
+      const slots = boothTimeSlots[activePattern][shift];
+      const entry = slots.find(e => e.tellerId === tellerId);
+      return (entry && entry.booths.length) ? entry.booths : [];
+    }
+
+    function getTellerSlotsStr(tellerId, shift) {
+      const booths = getTellerSlots(tellerId, shift);
+      if (!booths.length) return '';
+      return booths.map(b => b.id + ' ' + b.start + '-' + b.end).join(', ');
+    }
+
+    function getShiftSlotsCount(shift) {
+      return boothTimeSlots[activePattern][shift].length;
+    }
+
+    /* =========================
+       GENERATE ROSTER FUNCTION
+    ========================= */
+    function generateRoster() {
+
+      const startStr = document.getElementById("startDate").value;
+      const endStr = document.getElementById("endDate").value;
+      if (!startStr || !endStr) { alert("Select start & end dates"); return; }
+
+      let anyGenerated = false;
+
+      for (const pat of ['pattern1', 'pattern2']) {
+
+      const baseDateStr = document.getElementById("baseDate").value || startStr;
+      const baseD = new Date(baseDateStr);
+      const startD = new Date(startStr);
+      const endD = new Date(endStr);
+
+      const tellers = collectTellerIds(pat);
+      if (!tellers.length) { continue; }
+
+      anyGenerated = true;
+
+      const repeatRoster = document.getElementById("repeatRoster").checked;
+      let repeatDayFromLastNight = document.getElementById("repeatDayFromLastNight").checked;
+      const repeatSeparate = document.getElementById("repeatSeparate").checked;
+      if (repeatRoster && repeatDayFromLastNight) {
+        repeatDayFromLastNight = false;
+        document.getElementById("repeatDayFromLastNight").checked = false;
+      }
+      const rotationCycle = ["day", "day", "day", "day", "night", "night", "night", "night", "off", "off", "off", "off"];
+      let rotIdx = parseInt(document.getElementById("baseRotation").value);
+
+      /* -------- PRE-ROTATE TELLERS (BASE → START DATE) -------- */
+      let tmpDate = new Date(baseD);
+      let tmpRot = rotIdx;
+      let rotTellers = [...tellers];
+      let nightTellers = [];
+      let nightBlockOrders = [];
+      let nextDayRepeatOrders = [];
+      let lastDayTellers = [];
+
+      const origTellers = [...tellers];
+      let separateDayTellers = [...tellers];
+      let separateNightTellers = [...tellers];
+      let dayCount = 0;
+      let nightCount = 0;
+
+      while (tmpDate < startD) {
+        const dutyType = rotationCycle[tmpRot];
+
+        if (dutyType === "day") {
+          if (repeatSeparate) {
+            if (dayCount >= 4) { separateDayTellers = [...origTellers]; dayCount = 0; }
+            rotTellers = [...separateDayTellers];
+            separateDayTellers.unshift(separateDayTellers.pop());
+            dayCount++;
+            nightCount = 0;
+          } else {
+            const currentDayTellers = (repeatDayFromLastNight && nextDayRepeatOrders.length > 0)
+              ? [...nextDayRepeatOrders.shift()] : [...rotTellers];
+            lastDayTellers = [...currentDayTellers];
+            rotTellers = [...currentDayTellers];
+            rotTellers.unshift(rotTellers.pop());
+            if (repeatRoster && nightTellers.length === 0) nightTellers = [...lastDayTellers];
+          }
+        } else if (dutyType === "night") {
+          if (repeatSeparate) {
+            if (nightCount >= 4) { separateNightTellers = [...origTellers]; nightCount = 0; }
+            rotTellers = [...separateNightTellers];
+            separateNightTellers.unshift(separateNightTellers.pop());
+            nightCount++;
+            dayCount = 0;
+          } else {
+            const currentNightTellers = repeatRoster ? [...nightTellers] : [...rotTellers];
+            if (repeatDayFromLastNight) nightBlockOrders.push([...currentNightTellers]);
+            if (repeatRoster) { if (nightTellers.length > 0) nightTellers.unshift(nightTellers.pop()); }
+            else rotTellers.unshift(rotTellers.pop());
+          }
+        } else {
+          dayCount = 0;
+          nightCount = 0;
+        }
+
+        tmpRot = (tmpRot + 1) % rotationCycle.length;
+        if (!repeatSeparate && repeatDayFromLastNight && dutyType === "night" && rotationCycle[tmpRot] !== "night" && nightBlockOrders.length > 0) {
+          nextDayRepeatOrders = nightBlockOrders.map(order => [...order]);
+          nightBlockOrders = [];
+        }
+        tmpDate.setDate(tmpDate.getDate() + 1);
+      }
+
+      /* -------- BUILD ROSTER -------- */
+      const roster = {};
+      let cRot = tmpRot;
+
+      for (let d = new Date(startD); d <= endD; d.setDate(d.getDate() + 1)) {
+
+        const dateStr = d.toISOString().split("T")[0];
+        const dutyType = rotationCycle[cRot];
+        roster[dateStr] = [];
+
+        if (dutyType === "off") {
+          roster[dateStr].push({ shift: "OFF" });
+          dayCount = 0;
+          nightCount = 0;
+        }
+        else if (dutyType === "day") {
+          if (repeatSeparate) {
+            if (dayCount >= 4) { separateDayTellers = [...origTellers]; dayCount = 0; }
+            const currentDayTellers = [...separateDayTellers];
+            for (let i = 0; i < currentDayTellers.length; i++) {
+              roster[dateStr].push({
+                shift: "DAY",
+                teller: currentDayTellers[i],
+                slots: (boothTimeSlots[pat]["day"][i]?.booths || [])
+              });
+            }
+            separateDayTellers.unshift(separateDayTellers.pop());
+            dayCount++;
+            nightCount = 0;
+          } else {
+            const currentDayTellers = (repeatDayFromLastNight && nextDayRepeatOrders.length > 0)
+              ? [...nextDayRepeatOrders.shift()] : [...rotTellers];
+            for (let i = 0; i < currentDayTellers.length; i++) {
+              roster[dateStr].push({
+                shift: "DAY",
+                teller: currentDayTellers[i],
+                slots: (boothTimeSlots[pat]["day"][i]?.booths || [])
+              });
+            }
+            lastDayTellers = [...currentDayTellers];
+            rotTellers = [...currentDayTellers];
+            rotTellers.unshift(rotTellers.pop());
+            if (repeatRoster && nightTellers.length === 0) nightTellers = [...lastDayTellers];
+          }
+        }
+        else if (dutyType === "night") {
+          if (repeatSeparate) {
+            if (nightCount >= 4) { separateNightTellers = [...origTellers]; nightCount = 0; }
+            const currentNightTellers = [...separateNightTellers];
+            for (let i = 0; i < currentNightTellers.length; i++) {
+              roster[dateStr].push({
+                shift: "NIGHT",
+                teller: currentNightTellers[i],
+                slots: (boothTimeSlots[pat]["night"][i]?.booths || [])
+              });
+            }
+            separateNightTellers.unshift(separateNightTellers.pop());
+            nightCount++;
+            dayCount = 0;
+          } else {
+            let currentTellers = repeatRoster ? [...nightTellers] : [...rotTellers];
+            for (let i = 0; i < currentTellers.length; i++) {
+              roster[dateStr].push({
+                shift: "NIGHT",
+                teller: currentTellers[i],
+                slots: (boothTimeSlots[pat]["night"][i]?.booths || [])
+              });
+            }
+            if (repeatRoster) {
+              if (repeatDayFromLastNight) nightBlockOrders.push([...currentTellers]);
+              nightTellers.unshift(nightTellers.pop());
+            } else {
+              if (repeatDayFromLastNight) nightBlockOrders.push([...currentTellers]);
+              rotTellers.unshift(rotTellers.pop());
+            }
+          }
+        }
+
+        cRot = (cRot + 1) % rotationCycle.length;
+        if (!repeatSeparate && repeatDayFromLastNight && dutyType === "night" && rotationCycle[cRot] !== "night" && nightBlockOrders.length > 0) {
+          nextDayRepeatOrders = nightBlockOrders.map(order => [...order]);
+          nightBlockOrders = [];
+        }
+      }
+
+      previewRosters[pat] = roster;
+      } /* end for both patterns */
+
+      if (!anyGenerated) { alert("Add tellers to Booth Time Slot"); return; }
+
+      previewPattern = Object.keys(previewRosters.pattern1).length ? 'pattern1' : 'pattern2';
+      renderPreview();
+    }
+
+    function renderPreview() {
+
+      const body = document.getElementById("previewBody");
+      body.innerHTML = "";
+      const previewRoster = previewRosters[previewPattern];
+
+      document.getElementById('previewP1Btn').classList.toggle('active', previewPattern === 'pattern1');
+      document.getElementById('previewP2Btn').classList.toggle('active', previewPattern === 'pattern2');
+
+      let lastShift = "";
+
+      Object.keys(previewRoster).forEach(date => {
+
+        const rows = previewRoster[date];
+        const shift = rows[0].shift;
+
+        if (shift !== lastShift) {
+
+          let headerCells = "";
+
+          if (shift === "OFF") {
+            headerCells = "<th>Status</th>";
+          }
+          else {
+            headerCells = rows.map(r => {
+              let slotInfo = '-';
+              if (Array.isArray(r.slots) && r.slots.length > 0) {
+                slotInfo = r.slots.map(s => `${s.id} ${s.start}-${s.end}`).join(', ');
+              } else if (typeof r.slots === 'string' && r.slots) {
+                slotInfo = r.slots;
+              }
+              return `<th><small style="font-weight:400;color:#94a3b8">${slotInfo}</small></th>`;
+            }).join("");
+          }
+
+          body.innerHTML += `
+        <tr>
+          <th>Date</th>
+          <th>Type</th>
+          ${headerCells}
+        </tr>
+      `;
+
+          lastShift = shift;
+        }
+
+        let rowCells = "";
+
+        if (shift === "OFF") {
+          rowCells = `<td><span class="shift-badge off">Off Day</span></td>`;
+        } else {
+          rowCells = rows.map(r => {
+            const slotText = Array.isArray(r.slots) ? r.slots.map(s => s.id + ' ' + s.start + '-' + s.end).join(', ') : (r.slots || '');
+            return `<td title="${slotText}">${r.teller}</td>`;
+          }).join("");
+        }
+
+        const badgeClass = shift.toLowerCase();
+
+        body.innerHTML += `
+      <tr>
+        <td>${date}</td>
+        <td><span class="shift-badge ${badgeClass}">${shift}</span></td>
+        ${rowCells}
+      </tr>
+    `;
+      });
+
+      document.getElementById("previewCard").style.display = "block";
+    }
+
+    function switchPreview(p) {
+      previewPattern = p;
+      renderPreview();
+    }
+
+    function openLogin() { document.getElementById("loginModal").style.display = "flex"; }
+    function closeLogin() { document.getElementById("loginModal").style.display = "none"; }
+    function exportPDF() { window.print(); }
+  </script>
+  <script>
+    const passwords = {
+      Admin: "admin123",
+      Team1: "team1",
+      Team2: "team2",
+      Team3: "team3"
+    };
+
+    let currentUser = {
+      role: "Guest"
+    };
+
+    function openLogin() {
+      document.getElementById("loginModal").style.display = "flex";
+    }
+    function closeLogin() {
+      document.getElementById("loginModal").style.display = "none";
+    }
+
+    function doLogin() {
+      const role = loginRole.value;
+      const pwd = loginPassword.value;
+
+      if (passwords[role] !== pwd) {
+        alert("Invalid password");
+        return;
+      }
+
+      currentUser.role = role;
+      localStorage.setItem("userRole", role);
+
+      closeLogin();
+      applyRoleUI();
+      loadBaseRotationFromCloud(role);
+      loadBoothSettingsFromCloud(role, true);
+    }
+
+    function logout() {
+      localStorage.removeItem("userRole");
+      currentUser.role = "Guest";
+      applyRoleUI();
+    }
+
+    function applyRoleUI() {
+
+      const role = currentUser.role;
+      userRoleLabel.innerText = role;
+
+      const dot = document.getElementById("statusDot");
+
+      if (role === "Guest") {
+        authBtn.innerText = "Sign In";
+        authBtn.className = "btn btn-outline btn-sm";
+        authBtn.onclick = openLogin;
+        dot.classList.remove("online");
+
+        teamCard.style.display = "none";
+      }
+      else {
+        authBtn.innerText = "Sign Out";
+        authBtn.className = "btn btn-danger btn-sm";
+        authBtn.onclick = logout;
+        dot.classList.add("online");
+
+        teamCard.style.display = "block";
+
+        if (role === "Admin") {
+          teamSelect.disabled = false;
+        }
+        else {
+          teamSelect.value = role;
+          teamSelect.disabled = true;
+          // Auto-load on page refresh if logged in as team
+          if (window.hasAutoLoadedData !== true) {
+            loadBoothSettingsFromCloud(role, true);
+            loadBaseRotationFromCloud(role);
+            window.hasAutoLoadedData = true;
+          }
+        }
+      }
+      document.querySelectorAll(".admin-only").forEach(btn => {
+        btn.style.display = (role === "Admin") ? "inline-flex" : "none";
+      });
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      tsRenderTable();
+
+      document.getElementById('previewP1Btn').classList.add('active');
+      document.getElementById('previewP2Btn').classList.remove('active');
+
+      const repeatRoster = document.getElementById("repeatRoster");
+      const repeatDayFromLastNight = document.getElementById("repeatDayFromLastNight");
+      const repeatSeparate = document.getElementById("repeatSeparate");
+      [repeatRoster, repeatDayFromLastNight, repeatSeparate].forEach(cb => {
+        if (!cb) return;
+        cb.addEventListener("change", () => {
+          if (cb.checked) {
+            [repeatRoster, repeatDayFromLastNight, repeatSeparate].forEach(other => {
+              if (other !== cb) other.checked = false;
+            });
+          }
+        });
+      });
+
+      const teamSelect = document.getElementById("teamSelect");
+      if (teamSelect) {
+        teamSelect.addEventListener("change", (e) => {
+          const selectedTeam = e.target.value;
+          if (selectedTeam && currentUser.role === "Admin") {
+            loadBaseRotationFromCloud(selectedTeam);
+          }
+        });
+      }
+    });
+
+    window.onload = () => {
+      const saved = localStorage.getItem("userRole");
+      if (saved) currentUser.role = saved;
+      applyRoleUI();
+    };
+
+
+    function syncRosterToCloud() {
+
+      if (currentUser.role === "Guest") {
+        alert("Please login as a team to sync!");
+        return;
+      }
+      let activeTeam = currentUser.role === "Admin"
+        ? teamSelect.value
+        : currentUser.role;
+
+      if (!activeTeam || activeTeam.trim() === "") {
+        alert("Please select team first");
+        return;
+      }
+
+      const hasP1 = Object.keys(previewRosters.pattern1).length > 0;
+      const hasP2 = Object.keys(previewRosters.pattern2).length > 0;
+      if (!hasP1 && !hasP2) {
+        alert("Generate roster first!");
+        return;
+      }
+
+      const createdAt = firebase.firestore.Timestamp.fromDate(new Date());
+      const promises = [];
+      let syncedCollections = [];
+
+      for (const pat of ['pattern1', 'pattern2']) {
+        const roster = previewRosters[pat];
+        if (!Object.keys(roster).length) continue;
+        const colName = activeTeam.toLowerCase() + (pat === 'pattern2' ? 'P2Roster' : 'P1Roster');
+        const colRef = db.collection(colName);
+        syncedCollections.push(colName);
+
+        Object.keys(roster).forEach(date => {
+          const rows = roster[date];
+          const shift = rows[0]?.shift?.toLowerCase();
+
+          if (!shift || shift === "off") {
+            promises.push(colRef.doc(date).set({ tellers: [], offDay: true, pattern: pat, createdAt }));
+            return;
+          }
+
+          const dayTellers = rows.map(r => ({
+            teller: r.teller || "",
+            slots: r.slots || "",
+            shift: shift
+          }));
+
+          promises.push(colRef.doc(date).set({ tellers: dayTellers, offDay: false, pattern: pat, createdAt }));
+        });
+      }
+
+      saveBoothSettingsToCloud(activeTeam);
+      saveBaseRotationToCloud(activeTeam);
+
+      Promise.all(promises)
+        .then(() => alert(`Roster synced to ${syncedCollections.join(', ')} ✔`))
+        .catch(err => alert("Sync error: " + err.message));
+    }
+
+    function savePatternBoothToCloud(pattern) {
+      if (currentUser.role === "Guest") {
+        alert("Login as team first!");
+        return;
+      }
+      let activeTeam = currentUser.role === "Admin"
+        ? document.getElementById("teamSelect").value
+        : currentUser.role;
+      if (!activeTeam || activeTeam.trim() === "") {
+        alert("Select a team first!");
+        return;
+      }
+      saveBoothSettingsToCloud(activeTeam);
+    }
+
+    function saveBoothSettingsToCloud(team) {
+
+      if (!team) {
+        alert("Team missing");
+        return;
+      }
+
+      const boothCollection = team.toLowerCase() + "BoothSettings";
+
+      const settings = {
+        boothTimeSlots: boothTimeSlots,
+        activePattern: activePattern,
+        tellers: collectTellerIds(),
+        updatedAt: firebase.firestore.Timestamp.fromDate(new Date())
+      };
+
+      db.collection(boothCollection)
+        .doc("config")
+        .set(settings)
+        .then(() => alert("Booth settings saved ✔"))
+        .catch(e => alert(e.message));
+    }
+
+    function loadBoothSettingsFromCloud(team, silent = false) {
+      let boothCollection = "";
+
+      if (team === "Team1") boothCollection = "team1BoothSettings";
+      if (team === "Team2") boothCollection = "team2BoothSettings";
+      if (team === "Team3") boothCollection = "team3BoothSettings";
+
+      if (!boothCollection) {
+        if (!silent) alert("Invalid team");
+        return;
+      }
+
+      db.collection(boothCollection)
+        .doc("config")
+        .get()
+        .then(doc => {
+
+          if (!doc.exists) {
+            if (!silent) alert("No booth settings for " + team);
+            return;
+          }
+
+          const d = doc.data();
+
+          let loadedSlots = null;
+          if (d.boothTimeSlots) {
+            loadedSlots = d.boothTimeSlots;
+          } else if (d.day6 || d.day8 || d.night6 || d.night8) {
+            loadedSlots = migrateOldFormat(d);
+          }
+
+          if (loadedSlots) {
+            const patterns = silent ? ['pattern1', 'pattern2'] : [activePattern];
+            patterns.forEach(p => {
+              ['day', 'night'].forEach(s => {
+                const src = loadedSlots[p]?.[s] || [];
+                if (src.length > 0) {
+                  boothTimeSlots[p][s] = JSON.parse(JSON.stringify(src));
+                  if (!silent) {
+                    boothTimeSlots[p][s].forEach(e => { e.tellerId = ''; });
+                  }
+                }
+              });
+            });
+          }
+
+          if (d.activePattern) activePattern = d.activePattern;
+          tsRenderTable();
+
+          if (!silent) alert("Booth settings loaded from " + team + " ✔");
+
+        })
+        .catch(e => {
+          if (!silent) alert(e.message);
+        });
+    }
+
+    function migrateOldFormat(d) {
+      const result = { pattern1: { day: [], night: [] }, pattern2: { day: [], night: [] } };
+      const tellers = d.tellers || [];
+      const mapFn = (arr) => (arr || []).map((booth, i) => ({
+        tellerId: tellers[i] || '',
+        booths: booth ? [{ id: booth, start: DAY_HOURS[0], end: DAY_HOURS[Math.min(6, DAY_HOURS.length - 1)] }] : []
+      }));
+      result.pattern1.day = mapFn(d.day6);
+      result.pattern1.night = mapFn(d.night6);
+      result.pattern2.day = mapFn(d.day8);
+      result.pattern2.night = mapFn(d.night8);
+      return result;
+    }
+
+    function loadBaseRotationFromCloud(team) {
+
+      if (!team) return;
+
+      db.collection(team.toLowerCase() + "BaseSettings")
+        .doc("config")
+        .get()
+        .then(doc => {
+          if (doc.exists) {
+            const d = doc.data();
+            if (d.baseDate) document.getElementById("baseDate").value = d.baseDate;
+            if (d.baseRotation) document.getElementById("baseRotation").value = d.baseRotation;
+          }
+          loadBoothSettingsFromCloud(team, true);
+        })
+        .catch(e => {
+          console.log(e.message);
+          loadBoothSettingsFromCloud(team, true);
+        });
+    }
+
+    function saveBaseRotationToCloud(team) {
+
+      if (!team) return;
+
+      const baseSettings = {
+        baseDate: document.getElementById("baseDate").value,
+        baseRotation: document.getElementById("baseRotation").value,
+        tellers: collectTellerIds(),
+        updatedAt: firebase.firestore.Timestamp.fromDate(new Date())
+      };
+
+      db.collection(team.toLowerCase() + "BaseSettings")
+        .doc("config")
+        .set(baseSettings)
+        .catch(e => console.log(e.message));
+    }
+
+    /* ===== DOWNLOAD MODAL LOGIC ===== */
+    function openDownloadModal() {
+      if (currentUser.role === "Guest") {
+        alert("Please login first!");
+        return;
+      }
+      const s = document.getElementById('startDate').value;
+      const e = document.getElementById('endDate').value;
+      if (s) document.getElementById('dlStartDate').value = s;
+      if (e) document.getElementById('dlEndDate').value = e;
+
+      const allWrap = document.getElementById('dlAllTeamsWrap');
+      if (currentUser.role === "Admin") {
+        allWrap.style.display = 'block';
+        document.getElementById('dlAllTeams').checked = false;
+      } else {
+        allWrap.style.display = 'none';
+      }
+
+      document.getElementById('dlStatus').style.display = 'none';
+      document.getElementById('dlConfirmBtn').disabled = false;
+      document.getElementById('dlConfirmBtn').innerHTML = '⬇ Download';
+      document.getElementById('downloadModal').style.display = 'flex';
+    }
+
+    function closeDownloadModal() {
+      document.getElementById('downloadModal').style.display = 'none';
+    }
+
+    async function confirmDownloadRoster() {
+      const startStr = document.getElementById('dlStartDate').value;
+      const endStr = document.getElementById('dlEndDate').value;
+
+      if (!startStr || !endStr) {
+        alert('Please select both start and end dates!');
+        return;
+      }
+      if (startStr > endStr) {
+        alert('Start date must be before end date!');
+        return;
+      }
+
+      const allTeams = currentUser.role === 'Admin' && document.getElementById('dlAllTeams').checked;
+      const teams = allTeams
+        ? ['Team1', 'Team2', 'Team3']
+        : [currentUser.role === 'Admin' ? document.getElementById('teamSelect').value : currentUser.role];
+
+      if (!allTeams && (!teams[0] || teams[0].trim() === '')) {
+        alert('\u26a0 Please select a team first');
+        return;
+      }
+
+      const btn = document.getElementById('dlConfirmBtn');
+      const statusEl = document.getElementById('dlStatus');
+
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner" style="border-color:rgba(255,255,255,0.3);border-top-color:#fff"></span> Fetching\u2026';
+      statusEl.style.display = 'block';
+      statusEl.innerHTML = 'Loading roster data from cloud\u2026';
+      statusEl.style.color = '#64748b';
+
+      try {
+        const wb = XLSX.utils.book_new();
+        const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+        const CHUNK_SIZE = 10;
+        let totalDays = 0;
+
+        const wsData = [];
+        const merges = [];
+        const styleInstructions = [];
+        let currentRow = 0;
+
+        const allDates = [];
+        for (let d = new Date(startStr); d <= new Date(endStr); d.setDate(d.getDate() + 1)) {
+          allDates.push(d.toISOString().split('T')[0]);
+        }
+
+        for (const team of teams) {
+          const collP1 = team.toLowerCase() + 'P1Roster';
+          const collP2 = team.toLowerCase() + 'P2Roster';
+
+          statusEl.innerHTML = allTeams ? `Loading ${team}\u2026` : 'Loading roster data from cloud\u2026';
+
+          const [snapP1, snapP2] = await Promise.all([
+            db.collection(collP1)
+              .where(firebase.firestore.FieldPath.documentId(), '>=', startStr)
+              .where(firebase.firestore.FieldPath.documentId(), '<=', endStr)
+              .orderBy(firebase.firestore.FieldPath.documentId())
+              .get(),
+            db.collection(collP2)
+              .where(firebase.firestore.FieldPath.documentId(), '>=', startStr)
+              .where(firebase.firestore.FieldPath.documentId(), '<=', endStr)
+              .orderBy(firebase.firestore.FieldPath.documentId())
+              .get()
+          ]);
+
+          const rosterP1 = {};
+          snapP1.forEach(doc => { rosterP1[doc.id] = doc.data(); });
+          const rosterP2 = {};
+          snapP2.forEach(doc => { rosterP2[doc.id] = doc.data(); });
+
+          totalDays += Object.keys(rosterP1).length + Object.keys(rosterP2).length;
+
+          const patternTeams = [
+            { name: 'Pattern 1', data: rosterP1 },
+            { name: 'Pattern 2', data: rosterP2 }
+          ];
+
+          for (const pt of patternTeams) {
+            const rosterData = pt.data;
+            if (!Object.keys(rosterData).length) continue;
+
+            let maxTellers = 0;
+            allDates.forEach(date => {
+              const d = rosterData[date];
+              if (d && !d.offDay && d.tellers && d.tellers.length > maxTellers) {
+                maxTellers = d.tellers.length;
+              }
+            });
+
+            const daySlotLabels = [];
+            const nightSlotLabels = [];
+            for (let i = 0; i < maxTellers; i++) {
+              let ds = '', ns = '';
+              for (const date of allDates) {
+                const d = rosterData[date];
+                if (!d || d.offDay || !d.tellers || d.tellers.length === 0) continue;
+                const shift = (d.tellers[0]?.shift || 'day').toLowerCase();
+                const t = d.tellers[i];
+                if (t) {
+                  const slotsStr = (t.slots || []).map(s => {
+                    const sh = s.start.replace(':00','').replace(/^0/,'');
+                    const eh = s.end.replace(':00','').replace(/^0/,'');
+                    return s.id + ' ' + sh + '-' + eh;
+                  }).join(', ');
+                  if (shift === 'day' && !ds && slotsStr) ds = slotsStr;
+                  if (shift === 'night' && !ns && slotsStr) ns = slotsStr;
+                }
+              }
+              daySlotLabels.push(ds || '-');
+              nightSlotLabels.push(ns || '-');
+            }
+
+            const dateChunks = allTeams
+              ? [allDates]
+              : [];
+            if (!allTeams) {
+              for (let i = 0; i < allDates.length; i += CHUNK_SIZE) {
+                dateChunks.push(allDates.slice(i, i + CHUNK_SIZE));
+              }
+            }
+
+            dateChunks.forEach((chunk) => {
+              const titleText = `${team} ${pt.name} \u2014 ${chunk[0]} to ${chunk[chunk.length - 1]}`;
+            wsData.push([titleText]);
+            merges.push({ s: { r: currentRow, c: 0 }, e: { r: currentRow, c: 1 + chunk.length } });
+            styleInstructions.push({ r: currentRow, c: 0, s: { font: { bold: true, sz: 14 }, alignment: { horizontal: "left" } } });
+            currentRow++;
+            wsData.push([]);
+            currentRow++;
+
+            const headerRow = ['Day Slots', 'Night Slots'];
+            chunk.forEach(date => {
+              const parts = date.split('-');
+              if (parts.length === 3) {
+                headerRow.push(monthNames[parseInt(parts[1], 10) - 1] + '-' + parts[2]);
+              } else {
+                headerRow.push(date);
+              }
+            });
+            wsData.push(headerRow);
+            const headRowIdx = currentRow;
+
+            for (let c = 0; c < 2; c++) {
+              styleInstructions.push({ r: headRowIdx, c, s: { fill: { fgColor: { rgb: "CBD5E1" } }, font: { bold: true }, alignment: { horizontal: "left", vertical: "center" } } });
+              for (let dr = 0; dr < maxTellers; dr++) {
+                styleInstructions.push({ r: headRowIdx + 1 + dr, c, s: { font: { bold: false }, alignment: { horizontal: "left", vertical: "center" } } });
+              }
+            }
+
+            chunk.forEach((date, i) => {
+              const col = 2 + i;
+              const d = rosterData[date];
+              let shift = 'OFF';
+              if (d && !d.offDay && d.tellers && d.tellers.length > 0) {
+                shift = (d.tellers[0]?.shift || 'day').toUpperCase();
+              }
+              let headerBg = "E2E8F0", headerText = "000000", bodyBg = "F8FAFC";
+              if (shift === 'NIGHT') { headerBg = "1E293B"; headerText = "FFFFFF"; bodyBg = "F1F5F9"; }
+              else if (shift === 'DAY') { headerBg = "FEF08A"; headerText = "000000"; bodyBg = "FFFFFF"; }
+              styleInstructions.push({ r: headRowIdx, c: col, s: { fill: { fgColor: { rgb: headerBg } }, font: { color: { rgb: headerText }, bold: true }, alignment: { horizontal: "center", vertical: "center" } } });
+              for (let dr = 0; dr < maxTellers; dr++) {
+                styleInstructions.push({ r: headRowIdx + 1 + dr, c: col, s: { fill: { fgColor: { rgb: bodyBg } }, font: { color: { rgb: "000000" } }, alignment: { horizontal: "center", vertical: "center" }, border: { top: { style: "thin", color: { rgb: "E2E8F0" } }, bottom: { style: "thin", color: { rgb: "E2E8F0" } }, left: { style: "thin", color: { rgb: "E2E8F0" } }, right: { style: "thin", color: { rgb: "E2E8F0" } } } } });
+              }
+            });
+
+            currentRow++;
+            for (let i = 0; i < maxTellers; i++) {
+              const row = [daySlotLabels[i], nightSlotLabels[i]];
+              chunk.forEach(date => {
+                const d = rosterData[date];
+                if (!d || d.offDay || !d.tellers || d.tellers.length === 0) {
+                  row.push('OFF');
+                } else {
+                  row.push(d.tellers[i]?.teller || '-');
+                }
+              });
+              wsData.push(row);
+              currentRow++;
+            }
+            wsData.push([]);
+            wsData.push([]);
+            currentRow += 2;
+          });
+          } // end for patternTeams loop
+
+          if (allTeams) {
+            wsData.push([]);
+            wsData.push([]);
+            currentRow += 2;
+          }
+        }
+
+        if (totalDays === 0) {
+          statusEl.innerHTML = '\u274c No roster data found for this date range!';
+          statusEl.style.color = '#dc2626';
+          btn.disabled = false;
+          btn.innerHTML = '\u2b07 Download';
+          return;
+        }
+
+        const ws = XLSX.utils.aoa_to_sheet(wsData);
+        styleInstructions.forEach(({ r, c, s }) => {
+          const cellRef = XLSX.utils.encode_cell({ c, r });
+          if (!ws[cellRef]) ws[cellRef] = { t: 's', v: '' };
+          ws[cellRef].s = s;
+        });
+        ws['!merges'] = merges;
+        const colWidths = [{ wch: 14 }, { wch: 14 }];
+        for (let i = 0; i < CHUNK_SIZE; i++) colWidths.push({ wch: 9 });
+        ws['!cols'] = colWidths;
+
+        XLSX.utils.book_append_sheet(wb, ws, allTeams ? 'All Teams' : 'Roster');
+
+        statusEl.innerHTML = allTeams
+          ? `Building Excel (${teams.length} teams, ${totalDays} days)\u2026`
+          : `Found ${totalDays} day(s). Building Excel\u2026`;
+
+        const fileName = allTeams
+          ? `AllTeams_Roster_${startStr}_to_${endStr}.xlsx`
+          : `${teams[0]}_Roster_${startStr}_to_${endStr}.xlsx`;
+        XLSX.writeFile(wb, fileName);
+
+        statusEl.innerHTML = '\u2705 Download complete!';
+        statusEl.style.color = '#22c55e';
+        btn.innerHTML = '\u2714 Downloaded';
+        btn.style.background = 'linear-gradient(135deg, #22c55e, #16a34a)';
+
+        setTimeout(() => {
+          closeDownloadModal();
+          btn.disabled = false;
+          btn.innerHTML = '\u2b07 Download';
+          btn.style.background = '';
+        }, 1500);
+
+      } catch (err) {
+        console.error('Download error:', err);
+        statusEl.innerHTML = '\u274c Error: ' + err.message;
+        statusEl.style.color = '#dc2626';
+        btn.disabled = false;
+        btn.innerHTML = '\u2b07 Download';
+      }
+    }
+
+  </script>
+
+  <!-- PWA Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').then(reg => {
+          console.log('SW registered:', reg.scope);
+        }).catch(err => {
+          console.log('SW registration failed:', err);
+        });
+      });
+    }
+  </script>
+
+</body>
+
+</html>
